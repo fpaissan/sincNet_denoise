@@ -3,18 +3,17 @@
 Authors
  * Francesco Paissan, 2021
 """
-from typing import Tuple, List
-from numpy import genfromtxt, ndarray, array
-import numpy as np
-from numpy.lib.npyio import load
-from scipy.stats import zscore
-from random import shuffle, seed
-from torch import Tensor
-from torch.utils.data import Dataset, DataLoader
-from pytorch_lightning import LightningDataModule
 from pathlib import Path
+from random import seed
+from typing import List, Tuple
+
+import numpy as np
 import torch
-from torch.utils.data.dataset import Subset
+from numpy import array, genfromtxt, ndarray
+from pytorch_lightning import LightningDataModule
+from scipy.stats import zscore
+from torch import Tensor
+from torch.utils.data import DataLoader, Dataset
 
 seed(2408)
 np.random.seed(1305)

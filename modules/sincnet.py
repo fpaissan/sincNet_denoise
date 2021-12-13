@@ -1,15 +1,16 @@
-"""Data APIs for EEGDenoiseNet dataset
+"""Model definition for models proposed in EMBC paper.
 
 Authors
  * Francesco Paissan, 2021
 """
-import numpy as np
-from numpy.core.fromnumeric import shape
-import torch
-import torch.nn.functional as F
-import torch.nn as nn
-from torch.autograd import Variable
 import math
+
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from numpy.core.fromnumeric import shape
+from torch.autograd import Variable
 
 
 def flip(x, dim):
