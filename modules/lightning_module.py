@@ -27,14 +27,14 @@ class BadChannelDetection(pl.LightningModule):
         return nn.CrossEntropyLoss()(out.view(-1, self.num_classes), target)
 
     def configure_optimizers(self):
-        LR = 3e-4
+        LR = 1e-3
         optimizer = torch.optim.Adam(self.parameters(), lr=LR)
         return optimizer
 
     def _step(self, batch):
         X, y = batch
 
-        out = self(X)
+        out = self(X.unsqueeze(1).float())
         loss = self.loss_fn(out, y)
 
         logits = torch.argmax(out, dim=1)
@@ -45,7 +45,7 @@ class BadChannelDetection(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         accu, loss = self._step(batch)
 
-        self.log("train/acc", accu)
+        self.log("train/acc", accu, prog_bar=True)
         self.log("train/loss", loss)
 
         return loss

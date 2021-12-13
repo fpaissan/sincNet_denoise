@@ -68,7 +68,7 @@ class EEGDenoiseDataset(Dataset):
         self.X = np.concatenate((data_eog[0], data_emg[0], data_clean[0]), axis=0)
         self.y = np.concatenate((data_eog[1], data_emg[1], data_clean[1]), axis=0)
 
-    def __getitem__(self, index: int) -> Tuple[Tensor, int]:
+    def __getitem__(self, index: int) -> Tuple[ndarray, ndarray]:
         return self.X[index], self.y[index]
 
     def __len__(self):

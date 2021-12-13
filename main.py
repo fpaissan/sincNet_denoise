@@ -20,7 +20,7 @@ def main():
         mode="min",
     )
 
-    trainer = pl.Trainer(gpus=0, max_epochs=150, callbacks=[checkpoint_callback])
+    trainer = pl.Trainer(gpus=0, max_epochs=15, callbacks=[checkpoint_callback])
 
     trainer.fit(model=mod, datamodule=data_module)
     trainer.test(datamodule=data_module, verbose=1)
