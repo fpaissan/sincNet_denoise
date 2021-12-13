@@ -197,19 +197,24 @@ class SincConv_fast(nn.Module):
 
 
 class ConvNet(nn.Module):
-    def __init__(self, sr):
+    def __init__(self, sr, sinc=True):
         super().__init__()
-        self.net = nn.Sequential(
-            SincConv_fast(
-                16,
-                kernel_size=int(np.ceil(sr / 2)),
-                sample_rate=sr,
-            ),
-            nn.BatchNorm1d(16),
-            nn.ReLU(),
-            nn.AdaptiveAvgPool1d(1),
-            nn.Flatten(),
-        )
+        if not sinc:
+            self.net = nn.Sequential(
+                nn.Conv1d(1, 16, kernel_size=int(np.ceil(sr / 2)),),
+                nn.BatchNorm1d(16),
+                nn.ReLU(),
+                nn.AdaptiveAvgPool1d(1),
+                nn.Flatten(),
+            )
+        else:
+            self.net = nn.Sequential(
+                SincConv_fast(16, kernel_size=int(np.ceil(sr / 2)), sample_rate=sr),
+                nn.BatchNorm1d(16),
+                nn.ReLU(),
+                nn.AdaptiveAvgPool1d(1),
+                nn.Flatten(),
+            )
 
     def forward(self, X):
         return self.net(X)
@@ -218,11 +223,7 @@ class ConvNet(nn.Module):
 class ANN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(16, 8),
-            nn.ReLU(),
-            nn.Linear(8, 3),
-        )
+        self.net = nn.Sequential(nn.Linear(16, 8), nn.ReLU(), nn.Linear(8, 3),)
 
     def forward(self, X):
         return self.net(X)

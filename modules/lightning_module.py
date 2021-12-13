@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torchmetrics
-from modules.sincnet import ANN, ConvNet
+from modules.models import ANN, ConvNet, sinc
 
 
 class BadChannelDetection(pl.LightningModule):
@@ -15,10 +15,13 @@ class BadChannelDetection(pl.LightningModule):
         super().__init__()
         self.num_classes = 3
 
-        self.cnn = ConvNet(sr=256)
+        self.cnn = ConvNet(sr=256, sinc=False)
         self.dnn = ANN()
 
         self.accuracy = torchmetrics.Accuracy()
+        self.f1 = torchmetrics.F1(self.num_classes)
+        self.rec = torchmetrics.Recall(self.num_classes)
+        self.prec = torchmetrics.Precision(self.num_classes)
 
     def forward(self, x):
         return self.dnn(self.cnn(x))
@@ -39,29 +42,44 @@ class BadChannelDetection(pl.LightningModule):
 
         logits = torch.argmax(out, dim=1)
         accu = self.accuracy(logits, y)
+        prec = self.prec(logits, y)
+        rec = self.rec(logits, y)
+        f1 = self.f1(logits, y)
 
-        return accu, loss
+        return {"acc": accu, "loss": loss, "f1": f1, "prec": prec, "rec": rec}
 
     def training_step(self, batch, batch_idx):
-        accu, loss = self._step(batch)
+        met = self._step(batch)
 
-        self.log("train/acc", accu, prog_bar=True)
-        self.log("train/loss", loss)
+        stage = "train"
+        for key in met.keys():
+            if key == "acc":
+                self.log(f"{stage}/{key}", met[key], prog_bar=True)
+            else:
+                self.log(f"{stage}/{key}", met[key])
 
-        return loss
+        return met["loss"]
 
     def validation_step(self, batch, batch_idx):
-        accu, loss = self._step(batch)
+        met = self._step(batch)
 
-        self.log("val/loss", loss)
-        self.log("val/accu", accu)
+        stage = "val"
+        for key in met.keys():
+            if key == "acc":
+                self.log(f"{stage}/{key}", met[key])
+            else:
+                self.log(f"{stage}/{key}", met[key])
 
-        return loss, accu
+        return met["loss"]
 
     def test_step(self, batch, batch_idx):
-        accu, loss = self._step(batch)
+        met = self._step(batch)
 
-        self.log("test/loss", loss)
-        self.log("test/accu", accu)
+        stage = "test"
+        for key in met.keys():
+            if key == "acc":
+                self.log(f"{stage}/{key}", met[key])
+            else:
+                self.log(f"{stage}/{key}", met[key])
 
-        return loss, accu
+        return met["loss"]
