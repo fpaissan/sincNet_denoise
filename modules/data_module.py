@@ -29,29 +29,43 @@ class EEGDenoiseDataset(Dataset):
 
     @staticmethod
     def combine_waveforms(
-        clean: Tuple[ndarray, ndarray], noise: Tuple[ndarray, ndarray]
+        clean: Tuple[ndarray, ndarray], noise: Tuple[ndarray, ndarray], snr_db: float
     ) -> Tuple[ndarray, ndarray]:
-        """Overlaps clean signal and artifacts
+        """Combines waveforms with specified Signal to Noise ratio
 
-        :param data: [description]
-        :type data: Tuple[ndarray, ndarray]
+        :param clean: [description]
+        :type clean: Tuple[ndarray, ndarray]
+        :param noise: [description]
+        :type noise: Tuple[ndarray, ndarray]
+        :param snr_db: [description]
+        :type snr_db: float
         :return: [description]
         :rtype: Tuple[ndarray, ndarray]
         """
-        clean_EEG = zscore(clean[0], axis=1)
-        noise_EEG = zscore(noise[0], axis=1)
+        rms = lambda x: torch.sqrt(torch.mean(x ** 2, axis=1))
+
+        clean_EEG = clean[0]
+        noise_EEG = noise[0]
 
         # constructing noise vector with same dimensionality as clean data
         rep = np.ceil(len(clean_EEG) / len(noise_EEG))
         noise_EEG = np.repeat(noise_EEG, rep, axis=0)[: len(clean_EEG), :]
 
+        # Compute the mixing factor based on snr_db
+        lambda_snr = rms(clean_EEG) / rms(noise_EEG) / 10 ** (snr_db / 10)
+        lambda_snr = np.expand_dims(lambda_snr, 1)
+
         return (
-            zscore(clean_EEG + noise_EEG, axis=1),
+            zscore(clean_EEG + lambda_snr * noise_EEG, axis=1),
             array([noise[1][0]] * len(noise_EEG)),
         )
 
     def __init__(
-        self, file_path: Path = Path("data/"), split: str = "", transforms: List = []
+        self,
+        file_path: Path = Path("data/"),
+        split: str = "",
+        snr_db: float = 4,
+        transforms: List = [],
     ) -> None:
         # Labels are served as follows:
         # - 0 clean sample
@@ -61,8 +75,8 @@ class EEGDenoiseDataset(Dataset):
         data_eog = self.load_samples(file_path.joinpath(split, "EOG_256.csv"), 1)
         data_emg = self.load_samples(file_path.joinpath(split, "EMG_256.csv"), 2)
 
-        data_eog = self.combine_waveforms(data_clean, data_eog)
-        data_emg = self.combine_waveforms(data_clean, data_emg)
+        data_eog = self.combine_waveforms(data_clean, data_eog, snr_db)
+        data_emg = self.combine_waveforms(data_clean, data_emg, snr_db)
         data_clean = (zscore(data_clean[0], axis=1), data_clean[1])
 
         self.X = np.concatenate((data_eog[0], data_emg[0], data_clean[0]), axis=0)

@@ -3,6 +3,8 @@ Authors
  * Francesco Paissan, 2021
 """
 import pytorch_lightning as pl
+from pytorch_lightning import loggers
+from pytorch_lightning.loggers import WandbLogger
 
 from modules.data_module import EEGDenoiseDM
 from modules.lightning_module import BadChannelDetection
@@ -20,7 +22,11 @@ def main():
         mode="min",
     )
 
-    trainer = pl.Trainer(gpus=0, max_epochs=15, callbacks=[checkpoint_callback])
+    wandb_logger = WandbLogger(project="EEGTagging")
+
+    trainer = pl.Trainer(
+        gpus=0, max_epochs=150, callbacks=[checkpoint_callback],  # logger=wandb_logger,
+    )
 
     trainer.fit(model=mod, datamodule=data_module)
     trainer.test(datamodule=data_module, verbose=1)

@@ -6,8 +6,8 @@ Authors
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import torchmetrics
-from modules.models import ANN, ConvNet, sinc
+from torchmetrics.functional import recall, accuracy, f1, precision, confusion_matrix
+from modules.models import ANN, ConvNet
 
 
 class BadChannelDetection(pl.LightningModule):
@@ -15,13 +15,8 @@ class BadChannelDetection(pl.LightningModule):
         super().__init__()
         self.num_classes = 3
 
-        self.cnn = ConvNet(sr=256, sinc=False)
+        self.cnn = ConvNet(sr=256, sinc=True)
         self.dnn = ANN()
-
-        self.accuracy = torchmetrics.Accuracy()
-        self.f1 = torchmetrics.F1(self.num_classes)
-        self.rec = torchmetrics.Recall(self.num_classes)
-        self.prec = torchmetrics.Precision(self.num_classes)
 
     def forward(self, x):
         return self.dnn(self.cnn(x))
@@ -30,7 +25,7 @@ class BadChannelDetection(pl.LightningModule):
         return nn.CrossEntropyLoss()(out.view(-1, self.num_classes), target)
 
     def configure_optimizers(self):
-        LR = 1e-3
+        LR = 1e-2
         optimizer = torch.optim.Adam(self.parameters(), lr=LR)
         return optimizer
 
@@ -40,19 +35,19 @@ class BadChannelDetection(pl.LightningModule):
         out = self(X.unsqueeze(1).float())
         loss = self.loss_fn(out, y)
 
-        logits = torch.argmax(out, dim=1)
-        accu = self.accuracy(logits, y)
-        prec = self.prec(logits, y)
-        rec = self.rec(logits, y)
-        f1 = self.f1(logits, y)
+        accu = accuracy(out, y)
+        prec = precision(out, y)
+        rec = recall(out, y)
+        f1_score = f1(out, y)
 
-        return {"acc": accu, "loss": loss, "f1": f1, "prec": prec, "rec": rec}
+        return {"acc": accu, "loss": loss, "f1": f1_score, "prec": prec, "rec": rec}
 
     def training_step(self, batch, batch_idx):
         met = self._step(batch)
-
+        # print(met)
         stage = "train"
         for key in met.keys():
+            # input(f"{key}, {met[key]}")
             if key == "acc":
                 self.log(f"{stage}/{key}", met[key], prog_bar=True)
             else:
