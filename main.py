@@ -25,7 +25,7 @@ def main():
     wandb_logger = WandbLogger(project="EEGTagging")
 
     trainer = pl.Trainer(
-        gpus=0, max_epochs=150, callbacks=[checkpoint_callback],  # logger=wandb_logger,
+        gpus=0, max_epochs=150, callbacks=[checkpoint_callback], logger=wandb_logger,
     )
 
     trainer.fit(model=mod, datamodule=data_module)

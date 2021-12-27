@@ -40,13 +40,17 @@ class BadChannelDetection(pl.LightningModule):
         return [optimizer_dnn, optimizer_cnn]
 
     def _step(self, batch, infer="dnn"):
-        clean, X, y = batch
+        clean, noise, X, y = batch
 
         filtered_signal, y_hat = self(X.unsqueeze(1).float())
+        den_samples = (clean, filtered_signal)
+
         if infer == "dnn":
-            loss = self.loss_fn(y_hat, y, (clean, filtered_signal), alpha=0.6)
+            alpha = 0.6
         else:
-            loss = self.loss_fn(y_hat, y, (clean, filtered_signal), alpha=0.4)
+            alpha = 0.4
+
+        loss = self.loss_fn(y_hat, y, den_samples, alpha=0.4)
 
         accu = accuracy(y_hat, y)
         prec = precision(y_hat, y)

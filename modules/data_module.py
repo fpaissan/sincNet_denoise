@@ -56,8 +56,11 @@ class EEGDenoiseDataset(Dataset):
         lambda_snr = np.expand_dims(lambda_snr, 1)
 
         return (
-            zscore(clean_EEG + lambda_snr * noise_EEG, axis=1),
-            array([noise[1][0]] * len(noise_EEG)),
+            noise_EEG,
+            (
+                zscore(clean_EEG + lambda_snr * noise_EEG, axis=1),
+                array([noise[1][0]] * len(noise_EEG)),
+            ),
         )
 
     def __init__(
@@ -75,8 +78,8 @@ class EEGDenoiseDataset(Dataset):
         data_eog = self.load_samples(file_path.joinpath(split, "EOG_256.csv"), 1)
         data_emg = self.load_samples(file_path.joinpath(split, "EMG_256.csv"), 2)
 
-        data_eog = self.combine_waveforms(data_clean, data_eog, snr_db)
-        data_emg = self.combine_waveforms(data_clean, data_emg, snr_db)
+        noise_eog, data_eog = self.combine_waveforms(data_clean, data_eog, snr_db)
+        noise_emg, data_emg = self.combine_waveforms(data_clean, data_emg, snr_db)
         data_clean = (zscore(data_clean[0], axis=1), data_clean[1])
 
         self.X = np.concatenate((data_eog[0], data_emg[0], data_clean[0]), axis=0)
@@ -84,9 +87,17 @@ class EEGDenoiseDataset(Dataset):
         self.clean_samples = np.concatenate(
             (data_clean[0], data_clean[0], data_clean[0]), axis=0
         )
+        self.noise_samples = np.concatenate(
+            (noise_eog, noise_emg, np.zeros(shape=data_clean[0].shape)), axis=0
+        )
 
     def __getitem__(self, index: int) -> Tuple[ndarray, ndarray]:
-        return self.clean_samples[index], self.X[index], self.y[index]
+        return (
+            self.clean_samples[index],
+            self.noise_samples[index],
+            self.X[index],
+            self.y[index],
+        )
 
     def __len__(self):
         return len(self.X)
