@@ -11,6 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from numpy.core.fromnumeric import shape
 from torch.autograd import Variable
+from torch.nn.modules.conv import Conv1d
 
 
 def flip(x, dim):
@@ -73,15 +74,15 @@ class SincConv_fast(nn.Module):
         self,
         out_channels,
         kernel_size,
-        sample_rate=16000,
+        sample_rate=256,
         in_channels=1,
         stride=1,
         padding=0,
         dilation=1,
         bias=False,
         groups=1,
-        min_low_hz=50,
-        min_band_hz=50,
+        min_low_hz=0,
+        min_band_hz=1,
     ):
 
         super(SincConv_fast, self).__init__()
@@ -201,7 +202,7 @@ class ConvNet(nn.Module):
         super().__init__()
         if not sinc:
             self.net = nn.Sequential(
-                nn.Conv1d(1, 16, kernel_size=int(np.ceil(sr / 2)),),
+                nn.Conv1d(1, 16, kernel_size=int(np.ceil(sr / 2))),
                 nn.BatchNorm1d(16),
                 nn.ReLU(),
                 nn.AdaptiveAvgPool1d(1),
@@ -209,15 +210,31 @@ class ConvNet(nn.Module):
             )
         else:
             self.net = nn.Sequential(
-                SincConv_fast(16, kernel_size=int(np.ceil(sr / 2)), sample_rate=sr),
+                SincConv_fast(
+                    16,
+                    kernel_size=int(np.ceil(sr / 2)),
+                    sample_rate=sr,
+                    padding="same",
+                ),
                 nn.BatchNorm1d(16),
                 nn.ReLU(),
+                # nn.MaxPool1d(kernel_size=25),
+                # nn.Conv1d(16, 32, kernel_size=3),
+                # nn.BatchNorm1d(32),
+                # nn.ReLU(),
                 nn.AdaptiveAvgPool1d(1),
                 nn.Flatten(),
             )
 
     def forward(self, X):
-        return self.net(X)
+        y_hat = X
+        for idx, layer in enumerate(self.net):
+            if idx == 0:
+                filt = layer(y_hat)
+            else:
+                y_hat = layer(filt)
+
+        return filt, self.net(X)
 
 
 class ANN(nn.Module):
@@ -229,13 +246,13 @@ class ANN(nn.Module):
         return self.net(X)
 
 
-# if __name__ == "__main__":
-#     import os
+if __name__ == "__main__":
+    import os
 
-#     os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
+    os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
-#     f = ConvNet(sr=250)
-#     g = ANN()
+    f = ConvNet(sr=256)
+    g = ANN()
 
-#     X = torch.randn(size=(1, 1, 500))
-#     print(g(f(X)).shape)
+    X = torch.randn(size=(1, 1, 512))
+    print(f(X)[0].shape, f(X)[1].shape)

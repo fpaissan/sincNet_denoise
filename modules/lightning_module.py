@@ -8,47 +8,72 @@ import torch
 import torch.nn as nn
 from torchmetrics.functional import recall, accuracy, f1, precision, confusion_matrix
 from modules.models import ANN, ConvNet
+from numpy import save
 
 
 class BadChannelDetection(pl.LightningModule):
     def __init__(self):
         super().__init__()
         self.num_classes = 3
+        self.sinc = True
 
-        self.cnn = ConvNet(sr=256, sinc=True)
+        self.cnn = ConvNet(sr=256, sinc=self.sinc)
         self.dnn = ANN()
 
-    def forward(self, x):
-        return self.dnn(self.cnn(x))
+        self.automatic_optimization = False
 
-    def loss_fn(self, out, target):
-        return nn.CrossEntropyLoss()(out.view(-1, self.num_classes), target)
+    def forward(self, x):
+        h = self.cnn(x)
+        return torch.mean(h[0], axis=1).squeeze(), self.dnn(h[1])
+
+    def loss_fn(self, y_hat, target, signal, alpha):
+        ce = nn.CrossEntropyLoss()(y_hat.view(-1, self.num_classes), target)
+        den_component = torch.mean(torch.sqrt((signal[1] - signal[0]) ** 2))
+
+        return (1 - alpha) * den_component + alpha * ce
 
     def configure_optimizers(self):
-        LR = 1e-2
-        optimizer = torch.optim.Adam(self.parameters(), lr=LR)
-        return optimizer
+        LR = 1e-3
+        optimizer_dnn = torch.optim.Adam(self.dnn.parameters(), lr=LR)
+        optimizer_cnn = torch.optim.Adam(self.cnn.parameters(), lr=LR * 10)
 
-    def _step(self, batch):
-        X, y = batch
+        return [optimizer_dnn, optimizer_cnn]
 
-        out = self(X.unsqueeze(1).float())
-        loss = self.loss_fn(out, y)
+    def _step(self, batch, infer="dnn"):
+        clean, X, y = batch
 
-        accu = accuracy(out, y)
-        prec = precision(out, y)
-        rec = recall(out, y)
-        f1_score = f1(out, y)
+        filtered_signal, y_hat = self(X.unsqueeze(1).float())
+        if infer == "dnn":
+            loss = self.loss_fn(y_hat, y, (clean, filtered_signal), alpha=0.6)
+        else:
+            loss = self.loss_fn(y_hat, y, (clean, filtered_signal), alpha=0.4)
+
+        accu = accuracy(y_hat, y)
+        prec = precision(y_hat, y)
+        rec = recall(y_hat, y)
+        f1_score = f1(y_hat, y)
 
         return {"acc": accu, "loss": loss, "f1": f1_score, "prec": prec, "rec": rec}
 
     def training_step(self, batch, batch_idx):
-        met = self._step(batch)
-        # print(met)
+        dnn_opt, cnn_opt = self.optimizers()
+
+        # Update CNN filters
+        met = self._step(batch, infer="cnn")
+        cnn_opt.zero_grad()
+        self.manual_backward(met["loss"])
+        cnn_opt.step()
+
+        # Update DNN filters
+        met = self._step(batch, infer="dnn")
+        dnn_opt.zero_grad()
+        self.manual_backward(met["loss"])
+        dnn_opt.step()
+
         stage = "train"
         for key in met.keys():
             # input(f"{key}, {met[key]}")
-            if key == "acc":
+            if key == "acc" or key == "loss":
                 self.log(f"{stage}/{key}", met[key], prog_bar=True)
             else:
                 self.log(f"{stage}/{key}", met[key])
@@ -78,3 +103,11 @@ class BadChannelDetection(pl.LightningModule):
                 self.log(f"{stage}/{key}", met[key])
 
         return met["loss"]
+
+    def on_train_epoch_end(self, trainer=None, pl_module=None):
+        if self.sinc:
+            first_conv_filter = self.cnn.net[0].filters.clone()
+            first_conv_filter = first_conv_filter.detach().cpu().numpy()
+
+            with open(f"viz/{self.current_epoch}.npy", "wb") as write:
+                save(write, first_conv_filter)

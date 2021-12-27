@@ -42,7 +42,7 @@ class EEGDenoiseDataset(Dataset):
         :return: [description]
         :rtype: Tuple[ndarray, ndarray]
         """
-        rms = lambda x: torch.sqrt(torch.mean(x ** 2, axis=1))
+        rms = lambda x: np.sqrt(np.mean(x ** 2, axis=1))
 
         clean_EEG = clean[0]
         noise_EEG = noise[0]
@@ -81,9 +81,12 @@ class EEGDenoiseDataset(Dataset):
 
         self.X = np.concatenate((data_eog[0], data_emg[0], data_clean[0]), axis=0)
         self.y = np.concatenate((data_eog[1], data_emg[1], data_clean[1]), axis=0)
+        self.clean_samples = np.concatenate(
+            (data_clean[0], data_clean[0], data_clean[0]), axis=0
+        )
 
     def __getitem__(self, index: int) -> Tuple[ndarray, ndarray]:
-        return self.X[index], self.y[index]
+        return self.clean_samples[index], self.X[index], self.y[index]
 
     def __len__(self):
         return len(self.X)
@@ -134,6 +137,22 @@ class EEGDenoiseDM(LightningDataModule):
 
 
 # if __name__ == "__main__":
+#     a = EEGDenoiseDataset()
+
+#     import matplotlib.pyplot as plt
+
+#     c, X, y = a[0]
+
+#     sp = np.fft.rfft(c)
+#     freq = np.fft.rfftfreq(c.shape[-1], d=1 / 256)
+#     plt.plot(freq, np.abs(sp))
+
+#     sp = np.fft.rfft(X)
+#     freq = np.fft.rfftfreq(X.shape[-1], d=1 / 256)
+#     plt.plot(freq, np.abs(sp))
+
+#     plt.savefig("test_data.png")
+
 # a = EEGDenoiseDM()
 
 # X, y = [], []
