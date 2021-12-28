@@ -12,7 +12,7 @@ from numpy import save
 
 
 class BadChannelDetection(pl.LightningModule):
-    def __init__(self):
+    def __init__(self, orion_args):
         super().__init__()
         self.num_classes = 3
         self.sinc = True
@@ -21,6 +21,10 @@ class BadChannelDetection(pl.LightningModule):
         self.dnn = ANN()
 
         self.automatic_optimization = False
+
+        # parameters sampled for orion
+        self.LR = orion_args["lr"]
+        self.wd = orion_args["weight_decay"]
 
     def forward(self, x):
         h = self.cnn(x)
@@ -33,9 +37,13 @@ class BadChannelDetection(pl.LightningModule):
         return (1 - alpha) * den_component + alpha * ce
 
     def configure_optimizers(self):
-        LR = 1e-3
-        optimizer_dnn = torch.optim.Adam(self.dnn.parameters(), lr=LR)
-        optimizer_cnn = torch.optim.Adam(self.cnn.parameters(), lr=LR * 10)
+        # LR = 1e-3
+        optimizer_dnn = torch.optim.Adam(
+            self.dnn.parameters(), lr=self.LR, weight_decay=self.wd
+        )
+        optimizer_cnn = torch.optim.Adam(
+            self.cnn.parameters(), lr=self.LR * 10, weight_decay=self.wd
+        )
 
         return [optimizer_dnn, optimizer_cnn]
 

@@ -147,6 +147,9 @@ class EEGDenoiseDM(LightningDataModule):
         return DataLoader(self.val, **self.dl_params)
 
     def test_dataloader(self) -> DataLoader:
+        # next line only for orion optimization
+        return DataLoader(self.val, **self.dl_params)
+
         return DataLoader(self.test, **self.dl_params)
 
 
