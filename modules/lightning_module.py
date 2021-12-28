@@ -17,7 +17,12 @@ class BadChannelDetection(pl.LightningModule):
         self.num_classes = 3
         self.sinc = True
 
-        self.cnn = ConvNet(sr=256, sinc=self.sinc)
+        self.cnn = ConvNet(
+            sr=256,
+            sinc=self.sinc,
+            min_band_hz=orion_args["min_band_hz"],
+            kernel_mult=orion_args["kernel_mult"],
+        )
         self.dnn = ANN()
 
         self.automatic_optimization = False

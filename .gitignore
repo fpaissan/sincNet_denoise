@@ -4,6 +4,7 @@ lightning_logs/
 ckp/
 viz/
 wandb/
+hpo/
 *.mat
 *.py[cod]
 *$py.class

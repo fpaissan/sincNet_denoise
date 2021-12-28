@@ -198,11 +198,13 @@ class SincConv_fast(nn.Module):
 
 
 class ConvNet(nn.Module):
-    def __init__(self, sr, sinc=True):
+    def __init__(
+        self, sr, sinc=True, min_band_hz=None, kernel_mult=None,
+    ):
         super().__init__()
         if not sinc:
             self.net = nn.Sequential(
-                nn.Conv1d(1, 16, kernel_size=int(np.ceil(sr / 2))),
+                nn.Conv1d(1, 16, kernel_size=int(np.ceil(sr / kernel_mult))),
                 nn.BatchNorm1d(16),
                 nn.ReLU(),
                 nn.AdaptiveAvgPool1d(1),
@@ -212,9 +214,11 @@ class ConvNet(nn.Module):
             self.net = nn.Sequential(
                 SincConv_fast(
                     16,
-                    kernel_size=int(np.ceil(sr / 2)),
+                    kernel_size=int(np.ceil(sr / kernel_mult)),
                     sample_rate=sr,
                     padding="same",
+                    min_low_hz=0,
+                    min_band_hz=min_band_hz,
                 ),
                 nn.BatchNorm1d(16),
                 nn.ReLU(),
