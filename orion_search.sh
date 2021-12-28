@@ -1,0 +1,1 @@
+orion --debug hunt --config orion_setup.yaml python main.py --lr~'loguniform(0.0001, 0.1)' --weight_decay~'loguniform(0.001, 0.01)' --min_band_hz~'uniform(1, 30)' --kernel_mult~'uniform(2, 6)'

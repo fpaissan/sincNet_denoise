@@ -1,0 +1,8 @@
+storage:
+    database:
+        type: 'pickleddb'
+        host: 'hpo/embc-hpo.pkl'
+ 
+experiment:
+    name: 'embc-hpo1'
+    max_trials: 150
