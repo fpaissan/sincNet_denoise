@@ -50,7 +50,8 @@ class BadChannelDetection(pl.LightningModule):
         else:
             alpha = 0.4
 
-        loss = self.loss_fn(y_hat, y, den_samples, alpha=0.4)
+        alpha = 1
+        loss = self.loss_fn(y_hat, y, den_samples, alpha)
 
         accu = accuracy(y_hat, y)
         prec = precision(y_hat, y)

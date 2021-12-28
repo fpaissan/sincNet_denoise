@@ -51,6 +51,9 @@ class EEGDenoiseDataset(Dataset):
         rep = np.ceil(len(clean_EEG) / len(noise_EEG))
         noise_EEG = np.repeat(noise_EEG, rep, axis=0)[: len(clean_EEG), :]
 
+        # samples snr from phisiological range -- for oryon opt
+        snr_db = np.random.choice(np.arange(-7, 4.5, 0.5), (noise_EEG.shape[0],))
+
         # Compute the mixing factor based on snr_db
         lambda_snr = rms(clean_EEG) / rms(noise_EEG) / 10 ** (snr_db / 10)
         lambda_snr = np.expand_dims(lambda_snr, 1)
@@ -67,7 +70,7 @@ class EEGDenoiseDataset(Dataset):
         self,
         file_path: Path = Path("data/"),
         split: str = "",
-        snr_db: float = 4,
+        snr_db: float = -7,
         transforms: List = [],
     ) -> None:
         # Labels are served as follows:
@@ -147,8 +150,8 @@ class EEGDenoiseDM(LightningDataModule):
         return DataLoader(self.test, **self.dl_params)
 
 
-# if __name__ == "__main__":
-#     a = EEGDenoiseDataset()
+if __name__ == "__main__":
+    a = EEGDenoiseDataset()
 
 #     import matplotlib.pyplot as plt
 

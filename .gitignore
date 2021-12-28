@@ -2,6 +2,8 @@
 __pycache__/
 lightning_logs/
 ckp/
+viz/
+wandb/
 *.mat
 *.py[cod]
 *$py.class
