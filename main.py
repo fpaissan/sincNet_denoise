@@ -27,6 +27,9 @@ def parse_arguments():
     parser.add_argument(
         "--kernel_mult", type=float, help="Defines the kernel shape as sr/kernel_mult.",
     )
+    parser.add_argument(
+        "--epochs", type=int, help="Defines the number of epochs for training.",
+    )
 
     args = vars(parser.parse_args())
 
@@ -48,15 +51,15 @@ def run_configuration(args, data_module):
 
     trainer = pl.Trainer(
         gpus=1,
-        max_epochs=100,
-        callbacks=[
-            checkpoint_callback,
-            EarlyStopping(monitor="val/loss"),
-        ],  # logger=wandb_logger,
+        max_epochs=args["epochs"],
+        callbacks=[checkpoint_callback, EarlyStopping(monitor="val/loss"),],
+        # logger=wandb_logger,
     )
 
     trainer.fit(model=mod, datamodule=data_module)
     t = trainer.test(datamodule=data_module)
+
+    print(t)
 
     return 1 - t[0]["test/acc"]  # reports error rate
 

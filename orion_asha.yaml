@@ -1,0 +1,17 @@
+storage:
+  database:
+      type: 'pickleddb'
+      host: 'hpo/embc-hpo.pkl'
+
+experiment:
+    name: 'embc-hpo_ASHA'
+    max_trials: 200
+    max broken: 3
+    algorithms:
+        asha:
+            seed: null
+            num_rungs: null
+            num_brackets: 1
+            repetitions: 1
+    
+    strategy: StubParallelStrategy

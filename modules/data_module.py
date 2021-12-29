@@ -52,7 +52,8 @@ class EEGDenoiseDataset(Dataset):
         noise_EEG = np.repeat(noise_EEG, rep, axis=0)[: len(clean_EEG), :]
 
         # samples snr from phisiological range -- for oryon opt
-        snr_db = np.random.choice(np.arange(-7, 4.5, 0.5), (noise_EEG.shape[0],))
+        if snr_db is None:
+            snr_db = np.random.choice(np.arange(-7, 4.5, 0.5), (noise_EEG.shape[0],))
 
         # Compute the mixing factor based on snr_db
         lambda_snr = rms(clean_EEG) / rms(noise_EEG) / 10 ** (snr_db / 10)
@@ -147,14 +148,14 @@ class EEGDenoiseDM(LightningDataModule):
         return DataLoader(self.val, **self.dl_params)
 
     def test_dataloader(self) -> DataLoader:
-        # next line only for orion optimization
-        return DataLoader(self.val, **self.dl_params)
+        # # next line only for orion optimization
+        # return DataLoader(self.val, **self.dl_params)
 
         return DataLoader(self.test, **self.dl_params)
 
 
-if __name__ == "__main__":
-    a = EEGDenoiseDataset()
+# if __name__ == "__main__":
+#     a = EEGDenoiseDataset()
 
 #     import matplotlib.pyplot as plt
 
@@ -172,20 +173,21 @@ if __name__ == "__main__":
 
 # a = EEGDenoiseDM()
 
-# X, y = [], []
-# for s in a.train:
-#     X.append(s[0])
-#     y.append(s[1])
+# clean, noise, y = [], [], []
+# for s in a.test:
+#     clean.append(s[0])
+#     noise.append(s[1])
+#     y.append(s[3])
 
-# X = array(X)
+# clean = array(clean)
+# noise = array(noise)
 # y = array(y)
-# print(y.shape)
 
 # from scipy.io import savemat
 
-# savemat("train_set.mat", {"X": X, "y": y})
+# savemat("test_set.mat", {"clean": clean, "noise": noise, "y": y})
 
 # from scipy.io import loadmat
 
-# data = loadmat("val_set.mat")
-# print(data["X"].shape, data["y"].T.shape)
+# data = loadmat("test_set.mat")
+# # print(data["X"].shape, data["y"].T.shape)
