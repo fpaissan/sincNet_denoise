@@ -4,7 +4,8 @@ storage:
       host: 'hpo/embc-hpo.pkl'
 
 experiment:
-  name: 'embc-hpo_BAYES'
+  name: 'embc-hpo_BAYES2'
+  max_trials: 200
   algorithms:
       BayesianOptimizer:
           seed: null

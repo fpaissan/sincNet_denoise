@@ -71,7 +71,7 @@ class EEGDenoiseDataset(Dataset):
         self,
         file_path: Path = Path("data/"),
         split: str = "",
-        snr_db: float = -7,
+        snr_db: float = None,
         transforms: List = [],
     ) -> None:
         # Labels are served as follows:
@@ -113,6 +113,7 @@ class EEGDenoiseDM(LightningDataModule):
         batch_size: int = 64,
         file_path: Path = Path("data"),
         transforms: List = [],
+        snr_db: float = None,
     ) -> None:
         super().__init__()
         self.batch_size = batch_size
@@ -125,7 +126,7 @@ class EEGDenoiseDM(LightningDataModule):
             "pin_memory": False,
         }
 
-        data = EEGDenoiseDataset(file_path)
+        data = EEGDenoiseDataset(file_path, snr_db=snr_db)
         train, self.test = torch.utils.data.random_split(
             data,
             [int(np.floor(len(data) * 0.75)), int(np.ceil(len(data) * 0.25))],
@@ -148,10 +149,10 @@ class EEGDenoiseDM(LightningDataModule):
         return DataLoader(self.val, **self.dl_params)
 
     def test_dataloader(self) -> DataLoader:
-        # # next line only for orion optimization
-        # return DataLoader(self.val, **self.dl_params)
+        # next line only for orion optimization
+        return DataLoader(self.val, **self.dl_params)
 
-        return DataLoader(self.test, **self.dl_params)
+        # return DataLoader(self.test, **self.dl_params)
 
 
 # if __name__ == "__main__":

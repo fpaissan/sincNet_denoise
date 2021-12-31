@@ -59,14 +59,12 @@ def run_configuration(args, data_module):
     trainer.fit(model=mod, datamodule=data_module)
     t = trainer.test(datamodule=data_module)
 
-    print(t)
-
     return 1 - t[0]["test/acc"]  # reports error rate
 
 
 def main():
     args = parse_arguments()
-    data_module = EEGDenoiseDM()
+    data_module = EEGDenoiseDM(snr_db=None)
 
     # Check data module. you want to opt on validation set
     error_rate = run_configuration(args, data_module)
