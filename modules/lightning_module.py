@@ -15,7 +15,7 @@ class BadChannelDetection(pl.LightningModule):
     def __init__(self, orion_args):
         super().__init__()
         self.num_classes = 3
-        self.sinc = True
+        self.sinc = True 
 
         self.cnn = ConvNet(
             sr=256,

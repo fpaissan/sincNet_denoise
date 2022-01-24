@@ -204,7 +204,9 @@ class ConvNet(nn.Module):
         super().__init__()
         if not sinc:
             self.net = nn.Sequential(
-                nn.Conv1d(1, 16, kernel_size=int(np.ceil(sr / kernel_mult))),
+                nn.Conv1d(
+                    1, 16, kernel_size=int(np.ceil(sr / kernel_mult)), padding="same",
+                ),
                 nn.BatchNorm1d(16),
                 nn.ReLU(),
                 nn.AdaptiveAvgPool1d(1),

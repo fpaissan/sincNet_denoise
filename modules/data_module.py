@@ -56,7 +56,7 @@ class EEGDenoiseDataset(Dataset):
             snr_db = np.random.choice(np.arange(-7, 4.5, 0.5), (noise_EEG.shape[0],))
 
         # Compute the mixing factor based on snr_db
-        lambda_snr = rms(clean_EEG) / rms(noise_EEG) / 10 ** (snr_db / 10)
+        lambda_snr = rms(clean_EEG) / rms(noise_EEG) / 10 ** (snr_db / 20)
         lambda_snr = np.expand_dims(lambda_snr, 1)
 
         return (
@@ -155,40 +155,40 @@ class EEGDenoiseDM(LightningDataModule):
         # return DataLoader(self.test, **self.dl_params)
 
 
-# if __name__ == "__main__":
-#     a = EEGDenoiseDataset()
+if __name__ == "__main__":
+    # a = EEGDenoiseDataset()
 
-#     import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
 
-#     c, X, y = a[0]
+    # c, X, y = a[0]
 
-#     sp = np.fft.rfft(c)
-#     freq = np.fft.rfftfreq(c.shape[-1], d=1 / 256)
-#     plt.plot(freq, np.abs(sp))
+    # sp = np.fft.rfft(c)
+    # freq = np.fft.rfftfreq(c.shape[-1], d=1 / 256)
+    # plt.plot(freq, np.abs(sp))
 
-#     sp = np.fft.rfft(X)
-#     freq = np.fft.rfftfreq(X.shape[-1], d=1 / 256)
-#     plt.plot(freq, np.abs(sp))
+    # sp = np.fft.rfft(X)
+    # freq = np.fft.rfftfreq(X.shape[-1], d=1 / 256)
+    # plt.plot(freq, np.abs(sp))
 
-#     plt.savefig("test_data.png")
+    # plt.savefig("test_data.png")
 
-# a = EEGDenoiseDM()
+    a = EEGDenoiseDM()
 
-# clean, noise, y = [], [], []
-# for s in a.test:
-#     clean.append(s[0])
-#     noise.append(s[1])
-#     y.append(s[3])
+    clean, noise, y = [], [], []
+    for s in a.val:
+        clean.append(s[0])
+        noise.append(s[1])
+        y.append(s[3])
 
-# clean = array(clean)
-# noise = array(noise)
-# y = array(y)
+    clean = array(clean)
+    noise = array(noise)
+    y = array(y)
 
-# from scipy.io import savemat
+    from scipy.io import savemat
 
-# savemat("test_set.mat", {"clean": clean, "noise": noise, "y": y})
+    savemat("val_set.mat", {"clean": clean, "noise": noise, "y": y})
 
-# from scipy.io import loadmat
+    # from scipy.io import loadmat
 
-# data = loadmat("test_set.mat")
-# # print(data["X"].shape, data["y"].T.shape)
+    # data = loadmat("train_set.mat")
+    # # print(data["X"].shape, data["y"].T.shape)

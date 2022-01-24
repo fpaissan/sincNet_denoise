@@ -1,2 +1,2 @@
-# orion hunt --config orion_bayes.yaml python main.py --epochs~'fidelity(low=2, high=100, base=2)' --lr~'loguniform(0.0001, 0.1)' --weight_decay~'loguniform(0.001, 0.01)' --min_band_hz~'uniform(1, 30)' --kernel_mult~'uniform(2, 6)'
-orion hunt --config orion_bayes.yaml python main.py --epochs 100 --lr~'loguniform(0.0001, 0.1)' --weight_decay~'loguniform(0.001, 0.01)' --min_band_hz~'uniform(1, 30)' --kernel_mult~'uniform(2, 6)'
+orion hunt --config orion_asha.yaml python main.py --epochs~'fidelity(low=2, high=100, base=2)' --lr~'loguniform(0.0001, 0.1)' --weight_decay~'loguniform(0.001, 0.01)' --min_band_hz~'uniform(1, 30)' --kernel_mult~'uniform(2, 6)'
+# orion --debug hunt --config orion_asha.yaml python main.py --epochs 100 --lr~'loguniform(0.0001, 0.1)' --weight_decay~'loguniform(0.001, 0.01)' --min_band_hz~'uniform(1, 30)' --kernel_mult~'uniform(2, 6)'

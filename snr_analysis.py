@@ -16,10 +16,10 @@ if __name__ == "__main__":
         model = BadChannelDetection.load_from_checkpoint(
             "ckp/models-epoch=09-valid_loss=0.00.ckpt",
             orion_args={
-                "min_band_hz": 6.896,
+                "min_band_hz": 1.0,
                 "lr": None,
                 "weight_decay": None,
-                "kernel_mult": 4.77,
+                "kernel_mult": 3.903,
             },
         )
 

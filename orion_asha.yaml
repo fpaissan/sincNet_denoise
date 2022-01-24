@@ -4,7 +4,7 @@ storage:
       host: 'hpo/embc-hpo.pkl'
 
 experiment:
-    name: 'embc-hpo_ASHA'
+    name: 'embc-hpo_ASHA_CNN'
     max_trials: 200
     max broken: 3
     algorithms:

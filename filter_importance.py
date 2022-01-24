@@ -9,12 +9,12 @@ import torch
 
 if __name__ == "__main__":
     model = BadChannelDetection.load_from_checkpoint(
-        "ckp/models-epoch=09-valid_loss=0.00.ckpt",
+        "ckp/models-epoch=30-valid_loss=0.00.ckpt",
         orion_args={
-            "min_band_hz": 9.005,
+            "min_band_hz": 1.0,
             "lr": None,
             "weight_decay": None,
-            "kernel_mult": 4.221,
+            "kernel_mult": 3.298,
         },
     )
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     filter_imp = torch.sum(mlp_values, axis=0).squeeze().detach().numpy()
     # filter_imp = filter_imp / torch.sum(filter_imp)
 
-    with open("10.npy", "rb") as read:
+    with open("viz/33.npy", "rb") as read:
         f = np.load(read).squeeze()
 
     # f = torch.abs(torch.fft.fft(f))
@@ -37,9 +37,13 @@ if __name__ == "__main__":
     sp = np.abs(np.fft.rfft(f, axis=1))
     freq = np.fft.rfftfreq(f.shape[-1], d=1 / 256)
 
-    weighted_filters = sp.T * filter_imp
-
     import matplotlib.pyplot as plt
+
+    plt.plot(freq, np.mean(sp, axis=0) ** 2 / np.sum(np.mean(sp, axis=0) ** 2))
+    plt.savefig("avg filters")
+    plt.cla()
+
+    weighted_filters = sp.T * filter_imp
 
     # for w in weighted_filters:
     #     plt.plot(w)
